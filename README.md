@@ -14,6 +14,10 @@ This is a robust, scalable, and modular **API test automation framework using:
 - **TestNG and Junit ** for test execution
 - **Maven** for dependency management
 - **ConfigReader** utility for externalized configurations
+  
 
 # Running Tests
 - Right-click on CucumberRunnerTests.java → Run
+- Cucumber-based reports will be generated in target->MyReports
+
+  
