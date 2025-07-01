@@ -2,8 +2,10 @@ package stepdefinitions;
 
 import base.BaseTest;
 import com.qa.constants.AuthType;
+import com.qa.utils.ConfigReader;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
+import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.testng.Assert;
@@ -12,23 +14,28 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
+import static io.restassured.RestAssured.baseURI;
 import static io.restassured.path.json.JsonPath.from;
 
-public class APIDemoDefinitions {
+public class BBC_One_StepDef {
 
     private Response response;
     private String responseBody;
     protected  BaseTest baseTest;
 
 
-    public APIDemoDefinitions(){
+    public BBC_One_StepDef(){
         baseTest = new BaseTest();
+        baseURI = ConfigReader.get("baseURI");
     }
 
     @Given("I send a request to the URL to get episode details")
-    public void i_send_a_request_to_the_url_to_get_episode_details() {
-        response =  baseTest.restClient.get("https://testapi.io/api/RMSTest/ibltest","https://testapi.io/api/RMSTest/ibltest",null,null, AuthType.NO_AUTH,ContentType.JSON );
-        responseBody = response.getBody().asString();
+    public void i_send_a_request_to_the_url_to_get_episode_details(List<Map<String, String>> StepData) {
+        for (Map<String, String> s: StepData) {
+            String endpoint = s.get("endpoint");
+            response = baseTest.restClient.get(baseURI,endpoint, null, null, AuthType.NO_AUTH, ContentType.JSON);
+            responseBody = response.getBody().asString();
+        }
     }
 
 
@@ -94,6 +101,21 @@ public class APIDemoDefinitions {
 
             Assert.assertTrue(startInstant.isBefore(endInstant),"Start date is not before end date for item");
         }
+    }
+
+    @Then("the response header {string} should be present and not empty")
+    public void validate_response_header(String headerName) {
+        String headerValue = response.getHeader(headerName);
+        Assert.assertNotNull(headerValue,"Header '" + headerName + "' is missing");
+        Assert.assertFalse(headerValue.trim().isEmpty(),"Header '" + headerName + "' is empty");
+    }
+
+    @Then("the response should contain fields {string} and {string} in {string}")
+    public void validate_error_fields(String key1, String key2, String parentKey) {
+        Map<String, Object> errorMap = from(response.getBody().asString()).getMap(parentKey);
+
+        Assert.assertTrue(errorMap.containsKey(key1),"Missing field: " + key1);
+        Assert.assertTrue(errorMap.containsKey(key2),"Missing field: " + key2);
     }
 
 
